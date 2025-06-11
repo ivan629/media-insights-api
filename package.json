@@ -1,0 +1,24 @@
+{
+  "name": "media-insights",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@extractus/article-extractor": "^8.0.19",
+    "axios": "^1.9.0",
+    "cheerio": "^1.1.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "i": "^0.3.7",
+    "npm": "^11.4.1",
+    "rss-parser": "^3.13.0"
+  }
+}

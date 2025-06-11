@@ -1,0 +1,23 @@
+{
+    "rssSources": [
+    { "name": "Ukrinform", "url": "https://www.ukrinform.net/rss" },
+    { "name": "Unian", "url": "https://www.unian.info/rss/publications" },
+    { "name": "NV.ua", "url": "https://nv.ua/ukr/rss/all.xml" },
+    { "name": "24tv.ua", "url": "https://24tv.ua/rss/all.xml" },
+    { "name": "Zaxid.net", "url": "https://zaxid.net/static/rss/all.xml" },
+    { "name": "Espreso TV", "url": "https://espreso.tv/rss" },
+    { "name": "Channel 5", "url": "https://www.5.ua/rss" },
+    { "name": "UATV", "url": "https://uatv.ua/feed/" },
+    { "name": "OBOZREVATEL", "url": "https://www.obozrevatel.com/rss.xml" },
+    { "name": "RBK-Ukraine", "url": "https://www.rbc.ua/static/rss/all.rus.rss.xml" }
+],
+    "htmlSources": [
+    { "name": "Liga.net", "url": "https://www.liga.net/politics", "articleSelector": ".article__title a" },
+    { "name": "Hromadske.ua", "url": "https://hromadske.ua/news", "articleSelector": "a.list-item__title" },
+    { "name": "Suspilne", "url": "https://suspilne.media/news/", "articleSelector": "a.card-link" },
+    { "name": "Strana.ua", "url": "https://strana.ua/news.html", "articleSelector": ".article_news a" },
+    { "name": "TSN.ua", "url": "https://tsn.ua/ato", "articleSelector": "a.card__link" },
+    { "name": "ICTV.ua", "url": "https://ictv.ua/ua/novyny/", "articleSelector": "a.news-card__title-link" },
+    { "name": "Babel.ua", "url": "https://babel.ua/news", "articleSelector": "a.card__title" }
+]
+}
