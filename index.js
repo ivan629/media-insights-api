@@ -2,18 +2,18 @@ import express from 'express';
 import axios from 'axios';
 import Parser from 'rss-parser';
 import * as cheerio from 'cheerio';
-import cors from 'cors';
 import fs from 'fs';
-import path from 'path';
 import { extract } from '@extractus/article-extractor';
 import crypto from 'crypto';
+
+import { analyze } from './analyze.js';
 
 const app = express();
 const port = 3000;
 const parser = new Parser();
-app.use(cors());
 
-const sources = JSON.parse(fs.readFileSync('./sources.json', 'utf-8'));
+
+const sources = JSON.parse(fs.readFileSync('./sources/sources.json', 'utf-8'));
 const rssSources = sources.rssSources;
 const htmlSources = sources.htmlSources;
 
@@ -33,22 +33,44 @@ async function fetchFullText(link) {
     }
 }
 
+// Function to convert articles to sections format for analysis
+function articlesToSections(articles) {
+    return articles.map((article, index) => ({
+        id: article.id || `section-${index}`,
+        text: article.text,
+        index: article.index,
+        metadata: {
+            title: article.title,
+            source: article.source,
+            link: article.link,
+            pubDate: article.pubDate,
+            description: article.description,
+            date: article.date,
+            index: article.index
+        }
+    }));
+}
+
 app.get('/api/news', async (req, res) => {
     const allArticles = [];
     const seenIds = new Set(); // Track seen IDs to prevent duplicates
+    let globalIndex = 0; // Global index counter
 
+    // Process RSS sources
     for (const source of rssSources) {
         try {
             const feed = await parser.parseURL(source.url);
             for (const item of feed.items.slice(0, 10)) {
-                const fullText = await fetchFullText(item.link);
+                const text = await fetchFullText(item.link);
                 const article = {
+                    index: globalIndex++,
                     source: source.name,
                     title: item.title,
                     link: item.link,
                     pubDate: item.pubDate,
                     description: item.contentSnippet || '',
-                    fullText
+                    text: `${item.title} ${item.contentSnippet || ''} ${text}`.trim(),
+                    date: item.pubDate ? new Date(item.pubDate) : new Date(),
                 };
 
                 const id = generateArticleId(article);
@@ -65,6 +87,7 @@ app.get('/api/news', async (req, res) => {
         }
     }
 
+    // Process HTML sources
     for (const source of htmlSources) {
         try {
             const { data } = await axios.get(source.url);
@@ -76,15 +99,17 @@ app.get('/api/news', async (req, res) => {
                 const title = $(el).text().trim();
                 const link = $(el).attr('href');
                 const fullLink = link.startsWith('http') ? link : `${source.url}${link}`;
-                const fullText = await fetchFullText(fullLink);
+                const text = await fetchFullText(fullLink);
 
                 const article = {
+                    index: globalIndex++,
                     source: source.name,
                     title,
                     link: fullLink,
                     pubDate: null,
                     description: '',
-                    fullText
+                    text: `${title} ${text}`.trim(),
+                    date: new Date(),
                 };
 
                 const id = generateArticleId(article);
@@ -101,8 +126,40 @@ app.get('/api/news', async (req, res) => {
         }
     }
 
+    // Sort by date (newest first)
     allArticles.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
-    res.json(allArticles);
+
+    console.log(`Fetched ${allArticles.length} articles total`);
+
+    // Convert articles to sections format
+    const sections = articlesToSections(allArticles);
+
+    try {
+        const analysisResult = await analyze({
+            analyticsType: 'media-insights',
+            fileId: `media-insights-${Date.now()}`,
+            sections: sections,
+            forceReanalysis: true,
+            granularity: 'article',
+            options: {
+                granularity: 'article',
+                documentId: 'media-insights-document',
+            },
+        });
+
+        res.json({
+            analyses_started: true,
+            articles_count: allArticles.length,
+            analysis_id: analysisResult.id || 'analysis-started'
+        });
+    } catch (err) {
+        console.error('Analysis error:', err);
+        res.status(500).json({
+            error: 'Analysis failed',
+            message: err.message,
+            articles_count: allArticles.length
+        });
+    }
 });
 
 app.listen(port, () => {
