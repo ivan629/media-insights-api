@@ -37,7 +37,7 @@ export async function analyze({
                 'Content-Type': 'application/json'
             },
             maxContentLength: Infinity,
-                maxBodyLength: Infinity
+            maxBodyLength: Infinity
         });
 
         return response.data;

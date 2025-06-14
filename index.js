@@ -1,21 +1,20 @@
 import express from 'express';
-import axios from 'axios';
 import Parser from 'rss-parser';
-import * as cheerio from 'cheerio';
 import fs from 'fs';
 import { extract } from '@extractus/article-extractor';
 import crypto from 'crypto';
 
 import { analyze } from './analyze.js';
-
+import { fetchPrevAnalysedFiles } from './fetchPrevAnalysedFiles.js';
+import fetchArchiveRouter from './fetchArchiveRouter.js';
 const app = express();
 const port = 3000;
 const parser = new Parser();
 
-
-const sources = JSON.parse(fs.readFileSync('./sources/sources.json', 'utf-8'));
-const rssSources = sources.rssSources;
-const htmlSources = sources.htmlSources;
+const sourcesUkraine = JSON.parse(fs.readFileSync('./sources/ukraine_media_sources.json', 'utf-8'));
+const sourcesRussia = JSON.parse(fs.readFileSync('./sources/russian_media_sources.json', 'utf-8'));
+const sourcesUkraineSources  = sourcesUkraine.rssSources;
+const sourcesRussiaSources = sourcesRussia.rssSources;
 
 // Function to generate unique ID based on article properties
 function generateArticleId(article) {
@@ -36,7 +35,7 @@ async function fetchFullText(link) {
 // Function to convert articles to sections format for analysis
 function articlesToSections(articles) {
     return articles.map((article, index) => ({
-        id: article.id || `section-${index}`,
+        id: article.id,
         text: article.text,
         index: article.index,
         metadata: {
@@ -51,7 +50,7 @@ function articlesToSections(articles) {
     }));
 }
 
-app.get('/api/news', async (req, res) => {
+async function fetchArticls (rssSources) {
     const allArticles = [];
     const seenIds = new Set(); // Track seen IDs to prevent duplicates
     let globalIndex = 0; // Global index counter
@@ -60,7 +59,8 @@ app.get('/api/news', async (req, res) => {
     for (const source of rssSources) {
         try {
             const feed = await parser.parseURL(source.url);
-            for (const item of feed.items.slice(0, 10)) {
+
+            for (const item of feed.items) {
                 const text = await fetchFullText(item.link);
                 const article = {
                     index: globalIndex++,
@@ -85,61 +85,49 @@ app.get('/api/news', async (req, res) => {
         } catch (err) {
             console.error(`Error fetching RSS from ${source.name}:`, err.message);
         }
+
+        return allArticles;
     }
+}
 
-    // Process HTML sources
-    for (const source of htmlSources) {
-        try {
-            const { data } = await axios.get(source.url);
-            const $ = cheerio.load(data);
-            const elements = $(source.articleSelector).slice(0, 10);
+app.get('/api/news', async (req, res) => {
+    const prevAnalyzedFiles = await fetchPrevAnalysedFiles();
 
-            for (let i = 0; i < elements.length; i++) {
-                const el = elements[i];
-                const title = $(el).text().trim();
-                const link = $(el).attr('href');
-                const fullLink = link.startsWith('http') ? link : `${source.url}${link}`;
-                const text = await fetchFullText(fullLink);
+    console.log('prevAnalyzedFiles', JSON.stringify(prevAnalyzedFiles, null, 4));
 
-                const article = {
-                    index: globalIndex++,
-                    source: source.name,
-                    title,
-                    link: fullLink,
-                    pubDate: null,
-                    description: '',
-                    text: `${title} ${text}`.trim(),
-                    date: new Date(),
-                };
+    return
 
-                const id = generateArticleId(article);
-
-                // Only add if we haven't seen this ID before
-                if (!seenIds.has(id)) {
-                    article.id = id;
-                    allArticles.push(article);
-                    seenIds.add(id);
-                }
-            }
-        } catch (err) {
-            console.error(`Error scraping ${source.name}:`, err.message);
-        }
-    }
-
+    const allUkrainanArticles = await fetchArticls(sourcesUkraineSources)
+    const allRussianArticles = await fetchArticls(sourcesRussiaSources)
     // Sort by date (newest first)
-    allArticles.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+    allUkrainanArticles.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+    allRussianArticles.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
 
-    console.log(`Fetched ${allArticles.length} articles total`);
+    console.log(`Fetched ${allUkrainanArticles.length} Ukrainian articles total`);
+    console.log(`Fetched ${allRussianArticles.length} Russian articles total`);
 
     // Convert articles to sections format
-    const sections = articlesToSections(allArticles);
+    const allRussianSections = articlesToSections(allRussianArticles);
+    const allUkrainanSections = articlesToSections(allUkrainanArticles);
 
     try {
-        const analysisResult = await analyze({
+        const russianAnalysisResult = await analyze({
             analyticsType: 'media-insights',
-            fileId: `media-insights-${Date.now()}`,
-            sections: sections,
+            fileId: `russia-media-insights-${Date.now()}`,
+            sections: allRussianSections,
             forceReanalysis: true,
+            granularity: 'article',
+            options: {
+                granularity: 'article',
+                documentId: 'media-insights-document',
+            },
+        });
+
+        const ukrainanAnalysisResult = await analyze({
+            analyticsType: 'media-insights',
+            fileId: `ukraine-media-insights-${Date.now()}`,
+            sections: allUkrainanSections,
+            forceReanalysis: false,
             granularity: 'article',
             options: {
                 granularity: 'article',
@@ -149,15 +137,13 @@ app.get('/api/news', async (req, res) => {
 
         res.json({
             analyses_started: true,
-            articles_count: allArticles.length,
-            analysis_id: analysisResult.id || 'analysis-started'
+            articles_count: allRussianSections.length + allUkrainanSections.length,
         });
     } catch (err) {
         console.error('Analysis error:', err);
         res.status(500).json({
             error: 'Analysis failed',
             message: err.message,
-            articles_count: allArticles.length
         });
     }
 });

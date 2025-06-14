@@ -1,0 +1,44 @@
+{
+    "rssSources": [
+        {
+            "name": "TASS",
+            "url": "https://tass.com/rss/v2.xml"
+        },
+        {
+            "name": "RIA Novosti",
+            "url": "https://ria.ru/export/rss2/index.xml"
+        },
+        {
+            "name": "RT",
+            "url": "https://www.rt.com/rss/"
+        },
+        {
+            "name": "Sputnik",
+            "url": "https://sputniknews.com/export/rss2/index.xml"
+        },
+        {
+            "name": "The Moscow Times",
+            "url": "https://www.themoscowtimes.com/rss/news"
+        },
+        {
+            "name": "Lenta.ru",
+            "url": "https://lenta.ru/rss"
+        },
+        {
+            "name": "Gazeta.ru",
+            "url": "https://www.gazeta.ru/export/rss/lenta.xml"
+        },
+        {
+            "name": "Kommersant",
+            "url": "https://www.kommersant.ru/RSS/news.xml"
+        },
+        {
+            "name": "Vedomosti",
+            "url": "https://www.vedomosti.ru/rss/news"
+        },
+        {
+            "name": "Novaya Gazeta",
+            "url": "https://novayagazeta.ru/rss"
+        }
+    ]
+}

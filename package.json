@@ -16,10 +16,14 @@
     "axios": "^1.9.0",
     "cheerio": "^1.1.0",
     "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "i": "^0.3.7",
+    "node-cache": "^5.1.2",
     "npm": "^11.4.1",
-    "rss-parser": "^3.13.0"
+    "p-limit": "^6.2.0",
+    "rss-parser": "^3.13.0",
+    "unzipper": "^0.12.3"
   }
 }

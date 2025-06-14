@@ -1,0 +1,44 @@
+{
+    "rssSources": [
+        {
+            "name": "Ukrinform",
+            "url": "https://www.ukrinform.net/rss"
+        },
+        {
+            "name": "Unian",
+            "url": "https://www.unian.info/rss/publications"
+        },
+        {
+            "name": "NV.ua",
+            "url": "https://nv.ua/ukr/rss/all.xml"
+        },
+        {
+            "name": "24tv.ua",
+            "url": "https://24tv.ua/rss/all.xml"
+        },
+        {
+            "name": "Zaxid.net",
+            "url": "https://zaxid.net/static/rss/all.xml"
+        },
+        {
+            "name": "Espreso TV",
+            "url": "https://espreso.tv/rss"
+        },
+        {
+            "name": "Channel 5",
+            "url": "https://www.5.ua/rss"
+        },
+        {
+            "name": "UATV",
+            "url": "https://uatv.ua/feed/"
+        },
+        {
+            "name": "OBOZREVATEL",
+            "url": "https://www.obozrevatel.com/rss.xml"
+        },
+        {
+            "name": "RBK-Ukraine",
+            "url": "https://www.rbc.ua/static/rss/all.rus.rss.xml"
+        }
+    ]
+}
